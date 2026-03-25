@@ -3,40 +3,126 @@ import { geminiClient } from '../services/geminiClient';
 
 // Image cache for AI-generated obstacle sprites
 const imageCache = new Map();
+// Track generated images per biome to avoid duplicates
+const generatedBiomeImages = new Set();
 
 const loadObstacleImage = async (imageData, obstacleType) => {
   const cacheKey = `${obstacleType}_${imageData.slice(0, 50)}`; // Use partial data as key
-  
+
   if (imageCache.has(cacheKey)) {
     return imageCache.get(cacheKey);
   }
-  
+
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.onload = () => {
       imageCache.set(cacheKey, img);
+      console.log(`[IMAGE GEN] ✅ Successfully loaded image for ${obstacleType}`);
       resolve(img);
     };
     img.onerror = () => {
-      console.warn(`[useObstacles] Failed to load image for ${obstacleType}`);
+      console.log(`[IMAGE GEN] ❌ Failed to load image for ${obstacleType}`);
       resolve(null); // Resolve with null to indicate fallback to procedural
     };
     img.src = `data:image/png;base64,${imageData}`;
   });
 };
 
-const createObstacle = (type, x, imageData = null) => {
-  const baseObstacle = { id: Date.now() + Math.random(), imageData };
+// Pre-generate images for upcoming biomes
+const preGenerateBiomeImage = async (biome, score) => {
+  const biomeKey = `${biome}_${score}`;
+  if (generatedBiomeImages.has(biomeKey)) {
+    console.log(`[IMAGE GEN] ⏭️ Already generated image for ${biome} at score ${score}`);
+    return;
+  }
 
-  // Start loading image asynchronously if provided
-  if (imageData) {
-    loadObstacleImage(imageData, type).then(img => {
-      // Update the obstacle with the loaded image
-      setObstacles(prev => prev.map(obs => 
-        obs.id === baseObstacle.id ? { ...obs, image: img } : obs
-      ));
+  console.log(`[IMAGE GEN] 🎨 Starting pre-generation for ${biome} biome (score: ${score})`);
+
+  try {
+    // Determine which obstacle to generate for this biome
+    let obstacleType;
+    switch (biome) {
+      case 'JUNGLE':
+        obstacleType = 'TREE'; // Generate tree for jungle
+        break;
+      case 'VOLCANIC':
+        obstacleType = 'ROCK'; // Generate rock for volcanic
+        break;
+      case 'TUNDRA':
+        obstacleType = 'ICE_SPIKE'; // Generate ice spike for tundra
+        break;
+      case 'FINAL RUN':
+        obstacleType = 'ASTEROID'; // Generate asteroid for final run
+        break;
+      default:
+        console.log(`[IMAGE GEN] ⏭️ No image generation needed for ${biome}`);
+        return;
+    }
+
+    console.log(`[IMAGE GEN] 🎯 Generating image for ${obstacleType} in ${biome} biome`);
+
+    // Call the image generation API directly
+    const response = await fetch('/api/gemini/images', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ obstacleType, biome, style: 'pixel-art' })
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    const imageResult = await response.json();
+    if (imageResult.success && imageResult.imageData) {
+      console.log(`[IMAGE GEN] ✅ Generated image for ${obstacleType} (${imageResult.imageData.length} chars)`);
+
+      // Cache the image data for this biome
+      const cacheKey = `${biome}_${obstacleType}`;
+      imageCache.set(cacheKey, imageResult.imageData);
+      generatedBiomeImages.add(biomeKey);
+
+      console.log(`[IMAGE GEN] 💾 Cached image for ${biome} biome`);
+    } else {
+      console.log(`[IMAGE GEN] ❌ Image generation failed for ${obstacleType}: ${imageResult.error}`);
+    }
+
+  } catch (error) {
+    console.log(`[IMAGE GEN] 💥 Error pre-generating image for ${biome}:`, error.message);
+  }
+};
+
+const createObstacle = (type, x, biome, imageData = null) => {
+  const baseObstacle = { id: Date.now() + Math.random() };
+
+  // Check if we have a pre-generated image for this biome and type
+  const cacheKey = `${biome}_${type}`;
+  const cachedImageData = imageCache.get(cacheKey);
+
+  if (cachedImageData && typeof cachedImageData === 'string') {
+    // Load the pre-generated image
+    console.log(`[IMAGE GEN] 🎨 Using pre-generated image for ${type} in ${biome}`);
+    loadObstacleImage(cachedImageData, type).then(img => {
+      if (img) {
+        setObstacles(prev => prev.map(obs =>
+          obs.id === baseObstacle.id ? { ...obs, image: img } : obs
+        ));
+        console.log(`[IMAGE GEN] ✅ Applied pre-generated image to ${type}`);
+      }
     }).catch(err => {
-      console.warn(`[useObstacles] Failed to load image for ${type}:`, err);
+      console.log(`[IMAGE GEN] ❌ Failed to apply pre-generated image for ${type}:`, err.message);
+    });
+  } else if (imageData) {
+    // Fallback: load from provided imageData (from API response)
+    console.log(`[IMAGE GEN] 📥 Loading image from API response for ${type}`);
+    loadObstacleImage(imageData, type).then(img => {
+      if (img) {
+        setObstacles(prev => prev.map(obs =>
+          obs.id === baseObstacle.id ? { ...obs, image: img } : obs
+        ));
+        console.log(`[IMAGE GEN] ✅ Applied API image to ${type}`);
+      }
+    }).catch(err => {
+      console.log(`[IMAGE GEN] ❌ Failed to apply API image for ${type}:`, err.message);
     });
   }
 
@@ -129,40 +215,51 @@ export function useObstacles() {
     const now = Date.now();
     // Throttle: only allow fetches every 3 seconds minimum
     if (isFetchingWaveRef.current || waveQueueRef.current.length > 2 || (now - lastFetchTimeRef.current) < 3000) {
-      if ((now - lastFetchTimeRef.current) < 3000) console.log('[useObstacles] Throttled (cooldown active)');
+      // if ((now - lastFetchTimeRef.current) < 3000) console.log('[useObstacles] Throttled (cooldown active)');
       return;
     }
-    
+
     lastFetchTimeRef.current = now;
     isFetchingWaveRef.current = true;
-    
-    console.log('[useObstacles] Fetching wave, current queue length:', waveQueueRef.current.length);
+
+    // console.log('[useObstacles] Fetching wave, current queue length:', waveQueueRef.current.length);
     lastFetchTimeRef.current = now;
     isFetchingWaveRef.current = true;
-    
+
     let performance = 'average';
     if (score > 1000 && speed > 10) performance = 'thriving';
     else if (score < 200) performance = 'struggling';
-    
+
     try {
       const wave = await geminiClient.getObstacleWave(biome, speed, performance);
       if (wave && Array.isArray(wave)) {
-        console.log('[useObstacles] Added wave to queue:', wave);
+        // console.log('[useObstacles] Added wave to queue:', wave);
         waveQueueRef.current.push(...wave);
-        console.log('[useObstacles] Queue size after push:', waveQueueRef.current.length);
+        // console.log('[useObstacles] Queue size after push:', waveQueueRef.current.length);
       } else {
-        console.warn('[useObstacles] Invalid wave response:', wave);
+        // console.warn('[useObstacles] Invalid wave response:', wave);
       }
     } catch(e) {
-      console.error('[useObstacles] Fetch error:', e.message);
+      // console.error('[useObstacles] Fetch error:', e.message);
     }
     isFetchingWaveRef.current = false;
   }, []);
 
-  const updateObstacles = useCallback((deltaTime, speed, width, difficultyMultiplier, biome) => {
+  const updateObstacles = useCallback((deltaTime, speed, width, difficultyMultiplier, biome, score) => {
+    // Pre-generate images for upcoming biomes (100-200 points before threshold)
+    if (score >= 300 && score < 400 && !generatedBiomeImages.has(`JUNGLE_${Math.floor(score/100)*100}`)) {
+      preGenerateBiomeImage('JUNGLE', Math.floor(score));
+    } else if (score >= 1300 && score < 1400 && !generatedBiomeImages.has(`TUNDRA_${Math.floor(score/100)*100}`)) {
+      preGenerateBiomeImage('TUNDRA', Math.floor(score));
+    } else if (score >= 2800 && score < 2900 && !generatedBiomeImages.has(`VOLCANIC_${Math.floor(score/100)*100}`)) {
+      preGenerateBiomeImage('VOLCANIC', Math.floor(score));
+    } else if (score >= 4800 && score < 4900 && !generatedBiomeImages.has(`FINAL RUN_${Math.floor(score/100)*100}`)) {
+      preGenerateBiomeImage('FINAL RUN', Math.floor(score));
+    }
+
     setObstacles(prev => {
       let filtered = prev.filter(obs => obs.x + obs.width > 0);
-      
+
       filtered = filtered.map(obs => ({
         ...obs,
         x: obs.x - (speed * (deltaTime / 16.6))
@@ -173,21 +270,21 @@ export function useObstacles() {
       if (waveQueueRef.current.length > 0) {
         const nextInWave = waveQueueRef.current[0];
         const timingMs = (nextInWave.timing || 1000) * difficultyMultiplier;
-        
+
         if (spawnTimerRef.current > timingMs) {
-           console.log('[useObstacles] Spawning from queue:', nextInWave);
+           // console.log('[useObstacles] Spawning from queue:', nextInWave);
            spawnTimerRef.current = 0;
            waveQueueRef.current.shift();
-           const newObs = createObstacle(nextInWave.type, width, nextInWave.imageData);
+           const newObs = createObstacle(nextInWave.type, width, biome, nextInWave.imageData);
            newObs.narrative = nextInWave.narrative;
            filtered.push(newObs);
-           console.log('[useObstacles] Spawned obstacle:', newObs, 'Queue remaining:', waveQueueRef.current.length);
+           // console.log('[useObstacles] Spawned obstacle:', newObs, 'Queue remaining:', waveQueueRef.current.length);
         }
       } else {
         const spawnThreshold = (Math.random() * 1000 + (15000 / speed)) * difficultyMultiplier;
         if (spawnTimerRef.current > spawnThreshold) {
           spawnTimerRef.current = 0;
-          filtered.push(createObstacle('CACTUS', width));
+          filtered.push(createObstacle('CACTUS', width, biome));
         }
       }
 

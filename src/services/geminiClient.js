@@ -89,7 +89,13 @@ export const geminiClient = {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(context)
       });
-      
+
+      // Check if API call succeeded
+      if (!res.ok) {
+        console.log('[Client] Voice API failed with status:', res.status, '- using fallback');
+        throw new Error(`API Error: ${res.status}`);
+      }
+
       const reader = res.body.getReader();
       const decoder = new TextDecoder("utf-8");
 
@@ -101,7 +107,8 @@ export const geminiClient = {
       }
       onComplete();
     } catch (e) {
-      onToken("Wait... my connection to the AI hive mind is severed.");
+      console.log('[Client] Voice streaming failed:', e.message, '- using fallback dialogue');
+      // Don't call onToken here - let DinoVoice handle the fallback
       onComplete();
     }
   }

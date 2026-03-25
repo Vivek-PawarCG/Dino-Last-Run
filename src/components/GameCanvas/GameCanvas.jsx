@@ -21,18 +21,38 @@ let imgCactus = null;
 const renderBiomeObstacle = (ctx, obs, biome) => {
   const { x, y, width, height, type, image } = obs;
 
-  // If we have a loaded AI-generated image, use it
+  // Priority 1: Use AI-generated image if available
   if (image) {
     try {
       ctx.drawImage(image, x, y, width, height);
+      console.log(`[IMAGE GEN] 🎨 Rendered AI image for ${type} in ${biome.id}`);
       return; // Skip procedural rendering
     } catch (error) {
-      console.warn('[GameCanvas] Failed to draw AI image for', type, error);
-      // Fall through to procedural rendering
+      console.log(`[IMAGE GEN] ❌ Failed to draw AI image for ${type}, falling back to procedural`);
     }
   }
 
-  // Fallback to procedural rendering if no image or image failed to load
+  // Priority 2: For specific biome obstacles, show a placeholder indicating image is being generated
+  const shouldUseGeneratedImage = (
+    (biome.id === 'JUNGLE' && type === 'TREE') ||
+    (biome.id === 'VOLCANIC' && type === 'ROCK') ||
+    (biome.id === 'TUNDRA' && type === 'ICE_SPIKE') ||
+    (biome.id === 'FINAL RUN' && type === 'ASTEROID')
+  );
+
+  if (shouldUseGeneratedImage) {
+    // Draw a glowing placeholder to indicate AI image is expected
+    ctx.fillStyle = 'rgba(255, 255, 0, 0.3)';
+    ctx.fillRect(x, y, width, height);
+    ctx.strokeStyle = '#FFFF00';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(x, y, width, height);
+    console.log(`[IMAGE GEN] ⏳ Showing placeholder for ${type} in ${biome.id} (image generating)`);
+    return;
+  }
+
+  // Fallback to procedural rendering
+  console.log(`[IMAGE GEN] 🔧 Using procedural rendering for ${type} in ${biome.id}`);
   // Set colors based on biome and obstacle type
   let fillColor, strokeColor;
 
@@ -171,10 +191,10 @@ export default function GameCanvas({ onDeath, personality }) {
 
   useEffect(() => {
     if (!imgCactus && typeof window !== 'undefined') {
-      console.log('[GameCanvas] Initializing game...');
+      // console.log('[GameCanvas] Initializing game...');
       imgCactus = getSpriteImage(SPRITE_OBSTACLE_LARGE);
       initAudio();
-      console.log('[GameCanvas] Game initialized, ready for obstacles');
+      // console.log('[GameCanvas] Game initialized, ready for obstacles');
     }
   }, []);
 
@@ -223,11 +243,11 @@ export default function GameCanvas({ onDeath, personality }) {
 
     // Attempt to fetch obstacle wave (throttled to max 1 every 3 seconds in useObstacles hook)
     if (Math.random() < 0.01) {
-      console.log('[GameCanvas] Attempting to fetch wave (random 1% chance)');
+      // console.log('[GameCanvas] Attempting to fetch wave (random 1% chance)');
       fetchWave(biomeManagerRef.current.currentBiome.id, speed, score);
     }
 
-    updateObstacles(deltaTime, speed, 800, difficultyRef.current.spacing, biomeManagerRef.current.currentBiome.id);
+    updateObstacles(deltaTime, speed, 800, difficultyRef.current.spacing, biomeManagerRef.current.currentBiome.id, score);
 
     const scoreDelta = (speed * deltaTime) / 400;
     setScore(prev => {
@@ -257,7 +277,7 @@ export default function GameCanvas({ onDeath, personality }) {
     let nearMiss = false;
 
     if (obstacles.length > 0 && Math.random() < 0.005) {
-      console.log('[GameCanvas] Obstacles on screen:', obstacles.map(o => ({ type: o.type, x: Math.round(o.x), narrative: o.narrative })));
+      // console.log('[GameCanvas] Obstacles on screen:', obstacles.map(o => ({ type: o.type, x: Math.round(o.x), narrative: o.narrative })));
     }
 
     for (const obs of obstacles) {
@@ -292,12 +312,7 @@ export default function GameCanvas({ onDeath, personality }) {
         renderBiomeObstacle(ctx, obs, biomeManagerRef.current.currentBiome);
       }
 
-      if (obs.narrative) {
-        ctx.font = '8px "Press Start 2P"';
-        ctx.fillStyle = '#FFFFFF';
-        ctx.fillText(obs.narrative, obs.x, obs.y - 12);
-        ctx.fillStyle = biomeManagerRef.current.currentBiome.fg;
-      }
+      // Removed obstacle narrative display - now using REX voice warnings instead
     });
 
     dinoRef.current.draw(50, 250 + yPos - 47);
