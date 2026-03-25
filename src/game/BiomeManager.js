@@ -1,8 +1,8 @@
 export const BIOMES = {
   BADLANDS: { id: 'BADLANDS', threshold: 0, bg: '#000000', fg: '#FFFFFF' },
-  VOLCANIC: { id: 'VOLCANIC', threshold: 500, bg: '#1A0A00', fg: '#FFD700' },
-  JUNGLE: { id: 'JUNGLE', threshold: 1500, bg: '#1A0800', fg: '#7BC950' },
-  TUNDRA: { id: 'TUNDRA', threshold: 3000, bg: '#001A33', fg: '#FFFFFF' },
+  VOLCANIC: { id: 'VOLCANIC', threshold: 3000, bg: '#1A0A00', fg: '#FFD700' },
+  JUNGLE: { id: 'JUNGLE', threshold: 500, bg: '#1A0800', fg: '#7BC950' },
+  TUNDRA: { id: 'TUNDRA', threshold: 1500, bg: '#001A33', fg: '#FFFFFF' },
   FINAL: { id: 'FINAL RUN', threshold: 5000, bg: '#000000', fg: '#FF6600' }
 };
 

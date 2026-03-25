@@ -1,10 +1,10 @@
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).send('Method Not Allowed');
 
   try {
-    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
     const { score, biome, nearMisses, obstacleType, seconds, highScore } = req.body;
     
     const prompt = `You are Rex, a T-Rex who just died in an endless runner game. Write your own eulogy in 3 sentences. Facts about this run:
@@ -16,12 +16,11 @@ export default async function handler(req, res) {
     - Player's best score ever: ${highScore}
     Be specific to these facts. Be dramatic but funny. End with one piece of unsolicited life advice.`;
 
-    const response = await ai.models.generateContent({
-      model: "gemini-3.1-flash-lite-preview",
-      contents: prompt
-    });
+    const model = genAI.getGenerativeModel({ model: "gemini-3.1-flash-lite-preview" });
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
 
-    res.status(200).json({ text: response.text });
+    res.status(200).json({ text: response.text() });
   } catch (error) {
     console.error("Gemini Error:", error);
     res.status(200).json({ text: "I ran... until I couldn't. At least the meteor looks pretty. Keep jumping, kid." }); 
