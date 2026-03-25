@@ -6,7 +6,7 @@ export default async function handler(req, res) {
   try {
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
     const { pastScores } = req.body;
-    
+
     const prompt = `Analyze these 3 scores from a dinosaur endless runner: ${pastScores.join(', ')}. 
     Suggest subtle difficulty adjustments as JSON:
     { 
@@ -20,10 +20,10 @@ export default async function handler(req, res) {
     const response = await result.response;
     let text = response.text().replace(/```json/g, '').replace(/```/g, '').trim();
     const data = JSON.parse(text);
-    
+
     res.status(200).json(data);
   } catch (error) {
     console.error("Gemini Error:", error);
-    res.status(200).json({ obstacleSpacingMultiplier: 1.0, speedScalingRate: 1.0 }); 
+    res.status(200).json({ obstacleSpacingMultiplier: 1.0, speedScalingRate: 1.0 });
   }
 }
