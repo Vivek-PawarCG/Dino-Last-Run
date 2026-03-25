@@ -16,13 +16,22 @@ export function useVoiceInput(jump, duck, pause) {
       const current = event.resultIndex;
       const transcript = event.results[current][0].transcript.toLowerCase();
       
-      if (transcript.includes('jump') || transcript.includes('up')) {
+      // Jump commands
+      if (transcript.includes('jump') || transcript.includes('up') || transcript.includes('hop') || transcript.includes('leap')) {
         jump();
-      } else if (transcript.includes('duck') || transcript.includes('down')) {
+      } 
+      // Duck commands
+      else if (transcript.includes('duck') || transcript.includes('down') || transcript.includes('crouch') || transcript.includes('hide')) {
         duck(true);
         setTimeout(() => duck(false), 500);
-      } else if (transcript.includes('pause')) {
+      } 
+      // Pause commands
+      else if (transcript.includes('pause') || transcript.includes('stop') || transcript.includes('wait')) {
         if (pause) pause();
+      }
+      // Additional jump variations
+      else if (transcript.includes('go up') || transcript.includes('higher') || transcript.includes('fly')) {
+        jump();
       }
     };
 

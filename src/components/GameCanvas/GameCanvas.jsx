@@ -182,6 +182,9 @@ export default function GameCanvas({ onDeath, personality }) {
   const [speed, setSpeed] = useState(INITIAL_SPEED);
   const [biomeName, setBiomeName] = useState('BADLANDS');
   const [nearMissEvent, setNearMissEvent] = useState(false);
+  const [gameOverCountdown, setGameOverCountdown] = useState(null); // null = not showing, number = countdown seconds
+  const [deathTriggered, setDeathTriggered] = useState(false); // Track if death dialogue has been triggered
+  const [finalScore, setFinalScore] = useState(0); // Capture score at moment of death
 
   const difficultyRef = useRef({ spacing: 1.0, speedScale: 1.0 });
 
@@ -318,9 +321,29 @@ export default function GameCanvas({ onDeath, personality }) {
     dinoRef.current.draw(50, 250 + yPos - 47);
 
     if (crashed) {
-      playDeath();
-      setIsRunning(false);
-      dinoRef.current.state = 'dead';
+      if (gameOverCountdown === null) {
+        // Start the game over countdown
+        playDeath();
+        setIsRunning(false);
+        dinoRef.current.state = 'dead';
+        setFinalScore(Math.floor(score)); // Capture final score at moment of death
+        setGameOverCountdown(8); // 8 second countdown
+        setDeathTriggered(true); // Trigger REX's final words
+
+        // Start countdown timer
+        const countdownInterval = setInterval(() => {
+          setGameOverCountdown(prev => {
+            if (prev <= 1) {
+              clearInterval(countdownInterval);
+              onDeath(Math.floor(score), biomeManagerRef.current.currentBiome.id);
+              return null;
+            }
+            return prev - 1;
+          });
+        }, 1000);
+      }
+
+      // Render the death scene
       ctx.clearRect(0, 0, 800, 300);
       biomeManagerRef.current.draw();
       particleSystemRef.current.draw();
@@ -334,11 +357,29 @@ export default function GameCanvas({ onDeath, personality }) {
       });
       dinoRef.current.draw(50, 250 + yPos - 47);
 
-      setTimeout(() => {
-        onDeath(Math.floor(score), biomeManagerRef.current.currentBiome.id);
-      }, 500);
+      // Draw game over text with countdown
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+      ctx.fillRect(0, 0, 800, 300);
+
+      ctx.font = '24px "Press Start 2P"';
+      ctx.fillStyle = '#FF0000';
+      ctx.textAlign = 'center';
+      ctx.fillText('GAME OVER...', 400, 140);
+
+      ctx.font = '16px "Press Start 2P"';
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillText(`Score: ${Math.floor(score)}`, 400, 170);
+      // ctx.fillText(`Biome: ${biomeManagerRef.current.currentBiome.id}`, 400, 190);
+
+      if (gameOverCountdown !== null) {
+        ctx.font = '12px "Press Start 2P"';
+        ctx.fillStyle = '#FFFF00';
+        ctx.fillText(`Continuing to death screen in ${gameOverCountdown}...`, 400, 220);
+      }
+
+      ctx.textAlign = 'left';
     }
-  }, [speed, score, biomeName, updatePhysics, updateObstacles, yPos, isJumping, isDucking, obstacles, onDeath, isRunning, nearMissEvent, fetchWave]);
+  }, [speed, score, biomeName, updatePhysics, updateObstacles, yPos, isJumping, isDucking, obstacles, onDeath, isRunning, nearMissEvent, fetchWave, gameOverCountdown]);
 
   useGameLoop(loop, isRunning);
 
@@ -356,7 +397,7 @@ export default function GameCanvas({ onDeath, personality }) {
       </div>
 
       <button onClick={toggleVoice} className={`absolute top-12 left-6 md:left-12 font-pixel md:text-sm text-[10px] z-10 ${isListening ? 'text-green-500 animate-pulse' : 'text-gray-500'}`}>
-        MIC {isListening ? 'ON' : 'OFF'}
+        MIC {isListening ? 'ON (Say "jump", "duck", "pause")' : 'OFF'}
       </button>
 
       {/* The canvas keeps 800x300 internal logic but stretches fully across responsive screen */}
@@ -373,6 +414,8 @@ export default function GameCanvas({ onDeath, personality }) {
         score={score}
         nearMiss={nearMissEvent}
         skillLevel={personality}
+        gameOver={gameOverCountdown > 0}
+        deathTriggered={deathTriggered}
       />
     </div>
   );

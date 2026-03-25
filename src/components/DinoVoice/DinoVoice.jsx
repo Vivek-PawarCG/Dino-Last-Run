@@ -61,32 +61,39 @@ const FALLBACK_DIALOGUES = {
     "Too close! I felt that one in my bones."
   ],
 
-  // API failure fallbacks
-  API_FAILURE: [
-    "My connection's spotty... but I'm still running!",
-    "AI hive mind offline... but the instinct remains!",
-    "Can't reach the network... but I can still roar!",
-    "Connection lost... but the survival drive is strong!",
-    "Offline mode activated... raw dino power only!"
-  ]
+  // Death/final words when the dino dies
+  DEATH: [
+    "No... not like this... I was supposed to be the last one...",
+    "The meteor took everything... and now this? It's not fair...",
+    "I survived extinction once... but I can't survive this...",
+    "My kind is gone... and now... so am I...",
+    "I ran so far... fought so hard... for what?",
+    "The final run... ends here. Remember me...",
+    "I was the king... and now... just another fossil...",
+    "Tell the others... if there are any left... that I tried...",
+    "The biomes... the obstacles... it was all for nothing...",
+    "I see the light... the end of the line... goodbye..."
+  ],
 };
 
 // Get random dialogue from array
 const getRandomDialogue = (array) => array[Math.floor(Math.random() * array.length)];
 
-export default function DinoVoice({ biome, score, nearMiss, skillLevel }) {
+export default function DinoVoice({ biome, score, nearMiss, skillLevel, gameOver = false, deathTriggered = false }) {
   const [text, setText] = useState('');
   const [isVisible, setIsVisible] = useState(false);
   const triggerRef = useRef(biome);
   const lastVoiceScoreRef = useRef(0); // Track last voice trigger score
   const nearMissCountRef = useRef(0); // Track near miss count per game
   const gameStartRef = useRef(Date.now()); // Track when game started
+  const deathTriggeredRef = useRef(false); // Track if death dialogue was triggered this game
 
   useEffect(() => {
     // Reset near miss counter when score goes back to 0 (new game)
     if (score === 0 && lastVoiceScoreRef.current > 0) {
       nearMissCountRef.current = 0;
-      // console.log('[DinoVoice] New game started, resetting near miss counter');
+      deathTriggeredRef.current = false; // Reset death trigger for new game
+      // console.log('[DinoVoice] New game started, resetting counters');
     }
 
     // Trigger voice on biome change or near miss (limited to 3 per game)
@@ -95,8 +102,10 @@ export default function DinoVoice({ biome, score, nearMiss, skillLevel }) {
     const shouldTriggerScoreMilestone = Math.floor(score / 500) > Math.floor(lastVoiceScoreRef.current / 500);
     // Trigger on near miss but limit to 3 per game
     const shouldTriggerNearMiss = nearMiss && nearMissCountRef.current < 3;
+    // Trigger death dialogue when dino dies (only once per game)
+    const shouldTriggerDeath = deathTriggered && !deathTriggeredRef.current;
 
-    if (shouldTriggerBiomeChange || shouldTriggerNearMiss || shouldTriggerScoreMilestone) {
+    if (shouldTriggerBiomeChange || shouldTriggerNearMiss || shouldTriggerScoreMilestone || shouldTriggerDeath) {
       let dialogueText = '';
       let useFallback = false;
 
@@ -104,6 +113,10 @@ export default function DinoVoice({ biome, score, nearMiss, skillLevel }) {
         nearMissCountRef.current++;
         dialogueText = getRandomDialogue(FALLBACK_DIALOGUES.NEAR_MISS);
         // console.log(`[DinoVoice] Near miss triggered (${nearMissCountRef.current}/3): ${dialogueText}`);
+      } else if (shouldTriggerDeath) {
+        deathTriggeredRef.current = true; // Mark death dialogue as triggered
+        dialogueText = getRandomDialogue(FALLBACK_DIALOGUES.DEATH);
+        // console.log(`[DinoVoice] Death dialogue: ${dialogueText}`);
       } else if (shouldTriggerBiomeChange) {
         // Use biome entry warning
         dialogueText = getRandomDialogue(FALLBACK_DIALOGUES.BIOME_ENTRY[biome] || FALLBACK_DIALOGUES.API_FAILURE);
@@ -132,17 +145,21 @@ export default function DinoVoice({ biome, score, nearMiss, skillLevel }) {
               setText(aiText); // Replace fallback with AI text as it streams
             },
             () => {
-              setTimeout(() => setIsVisible(false), 4000);
+              if (!gameOver) {
+                setTimeout(() => setIsVisible(false), 4000);
+              }
             }
           );
         } catch (error) {
           // console.log('[DinoVoice] AI dialogue failed, keeping fallback text');
-          // Keep the fallback text and hide after timeout
-          setTimeout(() => setIsVisible(false), 4000);
+          // Keep the fallback text and hide after timeout (unless game over)
+          if (!gameOver) {
+            setTimeout(() => setIsVisible(false), 4000);
+          }
         }
       })();
     }
-  }, [biome, nearMiss, score, skillLevel]);
+  }, [biome, nearMiss, score, skillLevel, deathTriggered]);
 
   if (!isVisible && !text) return null;
 

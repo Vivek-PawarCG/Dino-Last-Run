@@ -56,7 +56,7 @@ const DeathScreen = ({ stats, onRestart, onDiary }) => {
       <div className="absolute inset-0 bg-black/60 z-[-1]" />
       <h2 className="md:text-5xl text-4xl text-biome-final-fg font-pixel animate-pulse">EXTINCT</h2>
 
-      <div className="w-full flex justify-center gap-8 font-pixel md:text-sm text-xs text-gray-400">
+      <div className="w-full flex justify-center gap-8 font-pixel md:text-sm text-xs text-red-500">
         <p>SCORE: {stats.score}</p>
         <p>BIOME: {stats.biome}</p>
         <p>TIME: {stats.seconds}s</p>
@@ -64,8 +64,8 @@ const DeathScreen = ({ stats, onRestart, onDiary }) => {
 
       <p className="md:text-sm text-xs font-pixel leading-6 md:leading-8 text-white text-center mt-2 h-auto max-h-[120px] overflow-hidden max-w-[800px] px-4">"{eulogy}"</p>
 
-      <div className="flex gap-8 mt-6 font-pixel">
-        <button onClick={onRestart} className="hover:text-biome-final-fg md:text-2xl text-xl transition-colors">RUN AGAIN</button>
+      <div className="flex gap-8 mt-6 font-pixel text-yellow-400">
+        <button onClick={onRestart} className="hover:text-biome-final-fg md:text-2xl text-xl transition-colors animate-pulse">RUN AGAIN</button>
         <button onClick={() => onDiary(stats)} className="text-gray-400 hover:text-white md:text-sm text-xs self-end transition-colors mb-1">Save to Diary</button>
       </div>
     </div>
