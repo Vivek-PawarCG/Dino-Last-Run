@@ -14,7 +14,7 @@ const SLIDES = [
   {
     image: 'rex_running.jpg',
     text: "But one refused to accept extinction. Rex didn't look back. There was no time for goodbyes. It was time to RUN.",
-    anim: 'scale-125 translate-x-4 animate-pulse'
+    anim: 'scale-125 translate-x-4'
   }
 ];
 
@@ -25,7 +25,7 @@ export default function IntroStory({ onComplete }) {
   const [isAnimating, setIsAnimating] = useState(false);
   const isSpeechFinished = useRef(false);
   const isTextFinished = useRef(false);
-  
+
   useEffect(() => {
     if (slideIndex >= SLIDES.length) {
       onComplete();
@@ -38,29 +38,36 @@ export default function IntroStory({ onComplete }) {
     isSpeechFinished.current = false;
     isTextFinished.current = false;
 
+    let isMounted = true;
+    let nextTimeout = null;
+    let fallbackTimeout = null;
+
     let transitionTriggered = false;
     const triggerNext = () => {
+      if (!isMounted) return;
       if (transitionTriggered) return;
       transitionTriggered = true;
       setIsFading(true);
       setIsAnimating(false);
-      setTimeout(() => {
-        setSlideIndex(prev => prev + 1);
-        setIsFading(false);
+      nextTimeout = setTimeout(() => {
+        if (isMounted) {
+          setSlideIndex(prev => prev + 1);
+          setIsFading(false);
+        }
       }, 1000);
     };
-    
+
     let hasSpeech = false;
     if ('speechSynthesis' in window) {
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(currentText);
-      utterance.rate = 1.1; 
-      utterance.pitch = 0.5; 
+      utterance.rate = 1.1;
+      utterance.pitch = 0.8;
       utterance.onend = () => {
         isSpeechFinished.current = true;
         if (isTextFinished.current) triggerNext();
       };
-      
+
       // Small delay to ensure voices load in some browsers
       setTimeout(() => window.speechSynthesis.speak(utterance), 100);
       hasSpeech = true;
@@ -76,18 +83,24 @@ export default function IntroStory({ onComplete }) {
         clearInterval(typeInterval);
         isTextFinished.current = true;
         // Wait 2500ms max if speech fails or doesn't trigger onend
-        setTimeout(() => {
-           if (!isSpeechFinished.current || hasSpeech === false) {
-             isSpeechFinished.current = true;
-             triggerNext();
-           } else if (isSpeechFinished.current) {
-             triggerNext();
-           }
-        }, hasSpeech ? 5000 : 2500); 
+        fallbackTimeout = setTimeout(() => {
+          if (!isMounted) return;
+          if (!isSpeechFinished.current || hasSpeech === false) {
+            isSpeechFinished.current = true;
+            triggerNext();
+          } else if (isSpeechFinished.current) {
+            triggerNext();
+          }
+        }, hasSpeech ? 4000 : 2500);
       }
-    }, 40); 
+    }, 40);
 
-    return () => clearInterval(typeInterval);
+    return () => {
+      isMounted = false;
+      clearInterval(typeInterval);
+      if (nextTimeout) clearTimeout(nextTimeout);
+      if (fallbackTimeout) clearTimeout(fallbackTimeout);
+    };
   }, [slideIndex, onComplete]);
 
   useEffect(() => {
@@ -101,17 +114,17 @@ export default function IntroStory({ onComplete }) {
   return (
     <div className={`absolute inset-0 w-full h-full bg-black flex flex-col justify-center items-center font-pixel transition-opacity duration-1000 z-10 ${isFading ? 'opacity-0' : 'opacity-100'}`}>
       <div className="w-full h-full bg-black flex justify-center items-center relative overflow-hidden">
-        
-        <div style={{ backgroundImage: `url(/images/${SLIDES[slideIndex].image})` }} 
-             className={`absolute w-full h-full bg-contain bg-no-repeat bg-center transition-all duration-[4000ms] ease-linear
+
+        <div style={{ backgroundImage: `url(/images/${SLIDES[slideIndex].image})` }}
+          className={`absolute w-full h-full bg-contain bg-no-repeat bg-center transition-all duration-[1500ms] ease-linear
                          ${isAnimating ? SLIDES[slideIndex].anim : 'scale-100 translate-x-0 translate-y-0 opacity-50'}`} />
-        
+
         <div className="absolute bottom-12 left-0 w-full text-center px-4 z-10">
           <p className="text-white text-xs md:text-sm bg-black/80 p-2 md:p-3 leading-5 md:leading-6 mx-auto inline-block border border-gray-700 max-w-[90%] md:max-w-[70%]">{displayedText}</p>
         </div>
       </div>
-      <button 
-        onClick={() => { window.speechSynthesis.cancel(); onComplete(); }} 
+      <button
+        onClick={() => { window.speechSynthesis.cancel(); onComplete(); }}
         className="absolute bottom-6 right-8 text-gray-500 hover:text-red-500 text-xs md:text-sm z-20 bg-black/50 px-3 py-1"
       >
         SKIP

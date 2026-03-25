@@ -14,7 +14,7 @@ import { initAudio, playDeath, playMilestone } from '../../game/AudioPlayer';
 
 const INITIAL_SPEED = 6;
 const MAX_SPEED = 15;
-const ACCELERATION = 0.001;
+const ACCELERATION = 0.0001;
 let imgCactus = null;
 
 // The game physics internal resolution is 800x300, 
@@ -93,7 +93,7 @@ export default function GameCanvas({ onDeath, personality }) {
     
     updateObstacles(deltaTime, speed, 800, difficultyRef.current.spacing, biomeManagerRef.current.currentBiome.id);
     
-    const scoreDelta = (speed * deltaTime) / 100;
+    const scoreDelta = (speed * deltaTime) / 400;
     setScore(prev => {
       const newScore = prev + scoreDelta;
       if (Math.floor(newScore) > 0 && Math.floor(newScore) % 100 === 0 && Math.floor(prev) % 100 !== 0) {

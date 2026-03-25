@@ -44,8 +44,15 @@ export class DinoSprite {
     } else if (this.state === 'dead') {
       sx = 4 * 88;
     } else if (this.state === 'ducking') {
-      sx = 6 * 88; 
-      sw = 118; // Ducking is wider
+      // The demo sprite sheet is missing the duck frame, so we squash the running frame dynamically
+      sx = (this.frame + 2) * 88;
+      
+      this.ctx.save();
+      this.ctx.translate(x + sw / 4, y + sh / 2);
+      this.ctx.scale(1.3, 0.65);
+      this.ctx.drawImage(img, sx, sy, sw, sh, -sw / 4, -sh / 2, sw / 2, sh / 2);
+      this.ctx.restore();
+      return;
     } 
 
     this.ctx.drawImage(img, sx, sy, sw, sh, x, y, sw/2, sh/2);

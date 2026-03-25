@@ -17,7 +17,7 @@ export default async function handler(req, res) {
     Be specific to these facts. Be dramatic but funny. End with one piece of unsolicited life advice.`;
 
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: "gemini-3.1-flash-lite-preview",
       contents: prompt
     });
 

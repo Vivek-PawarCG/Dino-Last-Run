@@ -10,7 +10,7 @@ export default async function handler(req, res) {
     const prompt = `Write a short journal entry (2-3 sentences) from the perspective of Rex the T-Rex after this run. Write in past tense, first person. Score: ${score}. Biome: ${biome}. Notable events: ${nearMisses} close calls. Death by: ${obstacle}. Tone: reflective, slightly melodramatic. Date it with a fictional 'Cretaceous timestamp' (e.g., '65,000,032 BC - Evening').`;
 
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: "gemini-3.1-flash-lite-preview",
       contents: prompt
     });
 

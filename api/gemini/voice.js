@@ -21,7 +21,7 @@ export default async function handler(req, res) {
     res.flushHeaders();
 
     const responseStream = await ai.models.generateContentStream({
-      model: "gemini-2.5-flash",
+      model: "gemini-3.1-flash-lite-preview",
       contents: prompt
     });
     
