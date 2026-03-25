@@ -2,17 +2,17 @@ import React, { useState, useEffect, useRef } from 'react';
 
 const SLIDES = [
   {
-    image: 'meteor_in_space.jpg',
+    image: 'meteor_in_space.webp',
     text: "66 million years ago, a shadow fell across the stars. The end was written in fire.",
     anim: 'scale-110 translate-x-2'
   },
   {
-    image: 'herds_watching.jpg',
+    image: 'herds_watching.webp',
     text: "The sky burned purple. The herds stood frozen, watching their doom approach. They accepted their fate.",
     anim: 'scale-110 -translate-y-4'
   },
   {
-    image: 'rex_running.jpg',
+    image: 'rex_running.webp',
     text: "But one refused to accept extinction. Rex didn't look back. There was no time for goodbyes. It was time to RUN.",
     anim: 'scale-125 translate-x-4'
   }
