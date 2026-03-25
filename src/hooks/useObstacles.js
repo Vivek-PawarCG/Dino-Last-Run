@@ -15,9 +15,21 @@ export function useObstacles() {
   const spawnTimerRef = useRef(0);
   const waveQueueRef = useRef([]);
   const isFetchingWaveRef = useRef(false);
+  const lastFetchTimeRef = useRef(0); // Track last fetch time
 
   const fetchWave = useCallback(async (biome, speed, score) => {
-    if (isFetchingWaveRef.current || waveQueueRef.current.length > 2) return;
+    const now = Date.now();
+    // Throttle: only allow fetches every 3 seconds minimum
+    if (isFetchingWaveRef.current || waveQueueRef.current.length > 2 || (now - lastFetchTimeRef.current) < 3000) {
+      if ((now - lastFetchTimeRef.current) < 3000) console.log('[useObstacles] Throttled (cooldown active)');
+      return;
+    }
+    
+    lastFetchTimeRef.current = now;
+    isFetchingWaveRef.current = true;
+    
+    console.log('[useObstacles] Fetching wave, current queue length:', waveQueueRef.current.length);
+    lastFetchTimeRef.current = now;
     isFetchingWaveRef.current = true;
     
     let performance = 'average';
@@ -27,9 +39,15 @@ export function useObstacles() {
     try {
       const wave = await geminiClient.getObstacleWave(biome, speed, performance);
       if (wave && Array.isArray(wave)) {
+        console.log('[useObstacles] Added wave to queue:', wave);
         waveQueueRef.current.push(...wave);
+        console.log('[useObstacles] Queue size after push:', waveQueueRef.current.length);
+      } else {
+        console.warn('[useObstacles] Invalid wave response:', wave);
       }
-    } catch(e) {}
+    } catch(e) {
+      console.error('[useObstacles] Fetch error:', e.message);
+    }
     isFetchingWaveRef.current = false;
   }, []);
 
@@ -49,11 +67,13 @@ export function useObstacles() {
         const timingMs = (nextInWave.timing || 1000) * difficultyMultiplier;
         
         if (spawnTimerRef.current > timingMs) {
+           console.log('[useObstacles] Spawning from queue:', nextInWave);
            spawnTimerRef.current = 0;
            waveQueueRef.current.shift();
            const newObs = createObstacle(nextInWave.type, width);
            newObs.narrative = nextInWave.narrative;
            filtered.push(newObs);
+           console.log('[useObstacles] Spawned obstacle:', newObs, 'Queue remaining:', waveQueueRef.current.length);
         }
       } else {
         const spawnThreshold = (Math.random() * 1000 + (15000 / speed)) * difficultyMultiplier;

@@ -4,6 +4,7 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).send('Method Not Allowed');
 
   try {
+    console.log('[GEMINI API] Obstacle request:', { biome: req.body.biome, speed: req.body.speed, performance: req.body.performance });
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
     const { biome, speed, performance } = req.body;
     
@@ -19,11 +20,13 @@ export default async function handler(req, res) {
     const result = await model.generateContent(prompt);
     const response = await result.response;
     let text = response.text().replace(/```json/g, '').replace(/```/g, '').trim();
+    console.log('[GEMINI API] Raw response:', text);
     const data = JSON.parse(text);
+    console.log('[GEMINI API] Parsed obstacles:', data);
     
     res.status(200).json(data);
   } catch (error) {
-    console.error("Gemini Error:", error);
+    console.error("[GEMINI API] Error:", error.message);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 }

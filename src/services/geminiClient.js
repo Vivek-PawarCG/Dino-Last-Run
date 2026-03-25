@@ -19,14 +19,18 @@ export const geminiClient = {
 
   async getObstacleWave(biome, speed, performance) {
     try {
+      console.log('[Client] Fetching obstacle wave for:', { biome, speed, performance });
       const res = await fetch(`${API_BASE}/obstacles`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ biome, speed, performance })
       });
       if (!res.ok) throw new Error('Network error');
-      return await res.json();
+      const data = await res.json();
+      console.log('[Client] Received obstacle wave:', data);
+      return data;
     } catch (e) {
+      console.warn('[Client] Obstacle fetch failed:', e.message);
       return null; // Fallback to procedural default in useObstacles
     }
   },

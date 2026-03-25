@@ -5,10 +5,17 @@ export default function DinoVoice({ biome, score, nearMiss, skillLevel }) {
   const [text, setText] = useState('');
   const [isVisible, setIsVisible] = useState(false);
   const triggerRef = useRef(biome);
+  const lastVoiceScoreRef = useRef(0); // Track last voice trigger score
 
   useEffect(() => {
-    if (biome !== triggerRef.current || nearMiss) {
+    // Trigger voice on biome change or near miss
+    const shouldTriggerBiomeChange = biome !== triggerRef.current;
+    // Trigger voice every 500 points
+    const shouldTriggerScoreMilestone = Math.floor(score / 500) > Math.floor(lastVoiceScoreRef.current / 500);
+    
+    if (shouldTriggerBiomeChange || nearMiss || shouldTriggerScoreMilestone) {
       triggerRef.current = biome;
+      lastVoiceScoreRef.current = score;
       setIsVisible(true);
       setText('');
 
