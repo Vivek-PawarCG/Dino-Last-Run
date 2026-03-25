@@ -21,12 +21,31 @@ export default async function handler(req, res) {
     const response = await result.response;
     let text = response.text().replace(/```json/g, '').replace(/```/g, '').trim();
     console.log('[GEMINI API] Raw response:', text);
-    const data = JSON.parse(text);
-    console.log('[GEMINI API] Parsed obstacles:', data);
+    
+    let data;
+    try {
+      data = JSON.parse(text);
+      console.log('[GEMINI API] Parsed obstacles:', data);
+    } catch (parseError) {
+      console.error('[GEMINI API] JSON parse error:', parseError.message);
+      console.error('[GEMINI API] Raw text that failed to parse:', text);
+      // Fallback: generate a simple obstacle wave
+      data = [
+        { type: 'CACTUS', timing: 800, narrative: 'A cactus blocks your path.' }
+      ];
+    }
     
     res.status(200).json(data);
   } catch (error) {
     console.error("[GEMINI API] Error:", error.message);
-    res.status(500).json({ error: 'Internal Server Error' });
+    
+    // Provide fallback obstacles instead of 500 error
+    const fallbackObstacles = [
+      { type: 'CACTUS', timing: 800, narrative: 'A cactus appears suddenly.' },
+      { type: 'CACTUS', timing: 1200, narrative: 'Another hazard approaches.' }
+    ];
+    
+    console.log('[GEMINI API] Returning fallback obstacles:', fallbackObstacles);
+    res.status(200).json(fallbackObstacles);
   }
 }

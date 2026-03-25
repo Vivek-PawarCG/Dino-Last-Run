@@ -18,21 +18,38 @@ export const geminiClient = {
   },
 
   async getObstacleWave(biome, speed, performance) {
-    try {
-      console.log('[Client] Fetching obstacle wave for:', { biome, speed, performance });
-      const res = await fetch(`${API_BASE}/obstacles`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ biome, speed, performance })
-      });
-      if (!res.ok) throw new Error('Network error');
-      const data = await res.json();
-      console.log('[Client] Received obstacle wave:', data);
-      return data;
-    } catch (e) {
-      console.warn('[Client] Obstacle fetch failed:', e.message);
-      return null; // Fallback to procedural default in useObstacles
+    const maxRetries = 2;
+    let lastError;
+    
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        console.log(`[Client] Fetching obstacle wave (attempt ${attempt}/${maxRetries}):`, { biome, speed, performance });
+        const res = await fetch(`${API_BASE}/obstacles`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ biome, speed, performance })
+        });
+        
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+        }
+        
+        const data = await res.json();
+        console.log('[Client] Received obstacle wave:', data);
+        return data;
+      } catch (e) {
+        console.warn(`[Client] Obstacle fetch attempt ${attempt} failed:`, e.message);
+        lastError = e;
+        
+        // Wait before retry (exponential backoff)
+        if (attempt < maxRetries) {
+          await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+        }
+      }
     }
+    
+    console.error('[Client] All obstacle fetch attempts failed:', lastError.message);
+    return null; // Fallback to procedural default in useObstacles
   },
 
   async getEulogy(stats) {

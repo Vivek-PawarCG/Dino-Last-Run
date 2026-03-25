@@ -6,21 +6,36 @@ export default function DinoVoice({ biome, score, nearMiss, skillLevel }) {
   const [isVisible, setIsVisible] = useState(false);
   const triggerRef = useRef(biome);
   const lastVoiceScoreRef = useRef(0); // Track last voice trigger score
+  const nearMissCountRef = useRef(0); // Track near miss count per game
+  const gameStartRef = useRef(Date.now()); // Track when game started
 
   useEffect(() => {
-    // Trigger voice on biome change or near miss
+    // Reset near miss counter when score goes back to 0 (new game)
+    if (score === 0 && lastVoiceScoreRef.current > 0) {
+      nearMissCountRef.current = 0;
+      console.log('[DinoVoice] New game started, resetting near miss counter');
+    }
+    
+    // Trigger voice on biome change or near miss (limited to 3 per game)
     const shouldTriggerBiomeChange = biome !== triggerRef.current;
     // Trigger voice every 500 points
     const shouldTriggerScoreMilestone = Math.floor(score / 500) > Math.floor(lastVoiceScoreRef.current / 500);
+    // Trigger on near miss but limit to 3 per game
+    const shouldTriggerNearMiss = nearMiss && nearMissCountRef.current < 3;
     
-    if (shouldTriggerBiomeChange || nearMiss || shouldTriggerScoreMilestone) {
+    if (shouldTriggerBiomeChange || shouldTriggerNearMiss || shouldTriggerScoreMilestone) {
+      if (shouldTriggerNearMiss) {
+        nearMissCountRef.current++;
+        console.log(`[DinoVoice] Near miss triggered (${nearMissCountRef.current}/3)`);
+      }
+      
       triggerRef.current = biome;
       lastVoiceScoreRef.current = score;
       setIsVisible(true);
       setText('');
 
       geminiClient.streamVoiceLine(
-        { biome, score: Math.floor(score), nearMiss: nearMiss || false, skillLevel },
+        { biome, score: Math.floor(score), nearMiss: shouldTriggerNearMiss || false, skillLevel },
         (chunk) => {
           setText(prev => prev + chunk);
         },
