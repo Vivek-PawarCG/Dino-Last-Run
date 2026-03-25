@@ -27,7 +27,7 @@ export const geminiClient = {
         const res = await fetch(`${API_BASE}/obstacles`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ biome, speed, performance })
+          body: JSON.stringify({ biome, speed, performance, generateImages: true })
         });
         
         if (!res.ok) {
