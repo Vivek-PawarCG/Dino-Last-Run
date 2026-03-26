@@ -1,11 +1,11 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenAI } from "@google/genai";
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).send('Method Not Allowed');
 
   try {
     console.log('[GEMINI API] Obstacle request:', { biome: req.body.biome, speed: req.body.speed, performance: req.body.performance });
-    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
     const { biome, speed, performance } = req.body;
     
     // Define biome-specific obstacle types
@@ -55,10 +55,15 @@ export default async function handler(req, res) {
     Make timing rhythmic and challenging. Include variety in obstacle types.
     Ensure obstacles fit the ${biome} biome theme.`;
 
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    let text = response.text().replace(/```json/g, '').replace(/```/g, '').trim();
+    const response = await ai.models.generateContent({
+      model: "gemini-3.1-flash-lite-preview",
+      contents: prompt,
+      config: {
+        responseMimeType: "application/json",
+        maxOutputTokens: 500
+      }
+    });
+    let text = response.text.replace(/```json/g, '').replace(/```/g, '').trim();
     console.log('[GEMINI API] Raw response:', text);
 
     let data;

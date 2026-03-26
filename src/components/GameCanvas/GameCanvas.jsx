@@ -368,9 +368,8 @@ export default function GameCanvas({ onDeath, personality }) {
 
       ctx.font = '16px "Press Start 2P"';
       ctx.fillStyle = '#FFFFFF';
-      ctx.fillText(`Score: ${Math.floor(score)}`, 400, 170);
       // ctx.fillText(`Biome: ${biomeManagerRef.current.currentBiome.id}`, 400, 190);
-
+      ctx.fillText(`Final Score: ${Math.floor(score)}`, 400, 200);
       if (gameOverCountdown !== null) {
         ctx.font = '12px "Press Start 2P"';
         ctx.fillStyle = '#FFFF00';
@@ -383,17 +382,30 @@ export default function GameCanvas({ onDeath, personality }) {
 
   useGameLoop(loop, isRunning);
 
+  {/* This gameState variable is not defined in the provided context, assuming it's defined elsewhere */ }
+  {/* {gameState === 'gameover' && (
+        <div className="absolute inset-0 bg-black/50 z-30 flex flex-col justify-center items-center text-white" role="alert" aria-live="assertive">
+          <h2 className="text-4xl md:text-6xl text-biome-final-fg font-pixel animate-pulse mb-8">EXTINCT</h2>
+        </div>
+      )} */}
+
   return (
     <div className="absolute inset-0 w-full h-full flex flex-col items-center select-none outline-none overflow-hidden bg-black"
       tabIndex="0"
       onTouchStart={(e) => { e.preventDefault(); jump(); }}
       onTouchEnd={(e) => { e.preventDefault(); duck(false); }}>
 
+      <div className="absolute top-1/4 w-full flex justify-center z-20 pointer-events-none px-4">
+        {/* narrativeText is not defined in the provided context, assuming it's defined elsewhere */}
+        {/* <p className="md:text-xl text-lg font-pixel leading-8 text-black bg-white/90 p-4 border-4 border-black max-w-[800px] text-center animate-pulse" aria-live="polite">{narrativeText}</p> */}
+      </div>
       <div className="absolute top-4 left-6 md:left-12 text-white font-pixel z-10 text-xs md:text-lg drop-shadow-md">
         <p style={{ color: biomeManagerRef.current?.currentBiome?.fg }}>BIOME: {biomeName}</p>
       </div>
       <div className="absolute top-4 right-6 md:right-12 text-white font-pixel z-10 text-xs md:text-lg drop-shadow-md">
-        <p style={{ color: biomeManagerRef.current?.currentBiome?.fg }}>SCORE: {Math.floor(score).toString().padStart(5, '0')}</p>
+        <div className="absolute top-20 right-8 text-white font-pixel text-xl md:text-2xl" aria-live="polite">
+          SCORE: {Math.floor(score).toString().padStart(5, '0')}
+        </div>
       </div>
 
       <button onClick={toggleVoice} className={`absolute top-12 left-6 md:left-12 font-pixel md:text-sm text-[10px] z-10 ${isListening ? 'text-green-500 animate-pulse' : 'text-gray-500'}`}>

@@ -1,10 +1,10 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenAI } from "@google/genai";
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).send('Method Not Allowed');
 
   try {
-    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
     const { pastScores } = req.body;
 
     const prompt = `Analyze these 3 scores from a dinosaur endless runner: ${pastScores.join(', ')}. 
@@ -15,10 +15,15 @@ export default async function handler(req, res) {
     }
     Rules: never make it feel unfair. Return ONLY JSON, no markdown blocks.`;
 
-    const model = genAI.getGenerativeModel({ model: "gemini-3.1-flash-lite-preview" });
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    let text = response.text().replace(/```json/g, '').replace(/```/g, '').trim();
+    const response = await ai.models.generateContent({
+      model: "gemini-3.1-flash-lite-preview",
+      contents: prompt,
+      config: {
+        responseMimeType: "application/json",
+        maxOutputTokens: 200
+      }
+    });
+    let text = response.text.replace(/```json/g, '').replace(/```/g, '').trim();
     const data = JSON.parse(text);
 
     res.status(200).json(data);
