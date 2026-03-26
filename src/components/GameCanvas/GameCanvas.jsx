@@ -69,6 +69,29 @@ const renderBiomeObstacle = (ctx, obs, biome) => {
 
   // Render different shapes based on obstacle type
   switch (type) {
+    case 'CACTUS':
+    case 'CACTUS_CLUSTER':
+      if (imgCactus && imgCactus.complete) {
+        // Draw original chrome dino cactus
+        ctx.drawImage(imgCactus, 0, 0, 50, 100, x, y, width, height);
+      } else {
+        ctx.fillRect(x, y, width, height);
+        ctx.strokeRect(x, y, width, height);
+      }
+      break;
+
+    case 'ROCK':
+    case 'LAVA_ROCK':
+      ctx.beginPath();
+      ctx.moveTo(x + width / 4, y);
+      ctx.lineTo(x + 3 * width / 4, y);
+      ctx.lineTo(x + width, y + height);
+      ctx.lineTo(x, y + height);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      break;
+
     case 'TREE':
       // Draw tree shape
       ctx.fillRect(x + width / 2 - 3, y, 6, height * 0.7); // trunk

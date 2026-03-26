@@ -11,23 +11,23 @@ export default async function handler(req, res) {
     // Define biome-specific obstacle types
     const biomeConfigs = {
       'BADLANDS': {
-        obstacles: ['CACTUS', 'CACTUS_CLUSTER', 'PTERODACTYL', 'ROCK'],
+        obstacles: ['CACTUS'],
         description: 'desert wasteland with cacti and rocks'
       },
       'JUNGLE': {
-        obstacles: ['TREE', 'VINE', 'MONKEY', 'LOG'],
+        obstacles: ['TREE'],
         description: 'dense jungle with trees and wildlife'
       },
       'VOLCANIC': {
-        obstacles: ['LAVA_ROCK', 'FIRE_PIT', 'ASH_CLOUD', 'MAGMA_POOL'],
+        obstacles: ['LAVA_ROCK'],
         description: 'volcanic landscape with lava and fire hazards'
       },
       'TUNDRA': {
-        obstacles: ['ICE_SPIKE', 'SNOW_DRIFT', 'FROST_CRYSTAL', 'AVALANCHE'],
+        obstacles: ['ICE_SPIKE'],
         description: 'frozen tundra with ice formations'
       },
       'FINAL RUN': {
-        obstacles: ['ASTEROID', 'COMET', 'ALIEN_POD', 'COSMIC_DUST'],
+        obstacles: ['ASTEROID'],
         description: 'cosmic realm with celestial hazards'
       }
     };
