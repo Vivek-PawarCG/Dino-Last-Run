@@ -391,22 +391,12 @@ export default function GameCanvas({ onDeath, personality }) {
 
   useGameLoop(loop, isRunning);
 
-  {/* This gameState variable is not defined in the provided context, assuming it's defined elsewhere */ }
-  {/* {gameState === 'gameover' && (
-        <div className="absolute inset-0 bg-black/50 z-30 flex flex-col justify-center items-center text-white" role="alert" aria-live="assertive">
-          <h2 className="text-4xl md:text-6xl text-biome-final-fg font-pixel animate-pulse mb-8">EXTINCT</h2>
-        </div>
-      )} */}
-
   return (
     <div className="absolute inset-0 w-full h-full flex flex-col items-center select-none outline-none overflow-hidden bg-black"
-      tabIndex="0"
       onTouchStart={(e) => { e.preventDefault(); jump(); }}
       onTouchEnd={(e) => { e.preventDefault(); duck(false); }}>
 
       <div className="absolute top-1/4 w-full flex justify-center z-20 pointer-events-none px-4">
-        {/* narrativeText is not defined in the provided context, assuming it's defined elsewhere */}
-        {/* <p className="md:text-xl text-lg font-pixel leading-8 text-black bg-white/90 p-4 border-4 border-black max-w-[800px] text-center animate-pulse" aria-live="polite">{narrativeText}</p> */}
       </div>
       <div className="absolute top-4 left-6 md:left-12 text-white font-pixel z-10 text-xs md:text-lg drop-shadow-md">
         <p style={{ color: biomeManagerRef.current?.currentBiome?.fg }}>BIOME: {biomeName}</p>
@@ -428,6 +418,9 @@ export default function GameCanvas({ onDeath, personality }) {
         height={300}
         className="w-full h-full object-contain bg-black border-4 border-gray-800"
         style={{ imageRendering: 'pixelated' }}
+        tabIndex={0}
+        role="application"
+        aria-label="Endless Runner Game. Press Space or Up Arrow to jump, Down Arrow to duck."
       />
 
       <DinoVoice

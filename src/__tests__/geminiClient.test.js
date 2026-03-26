@@ -8,7 +8,7 @@ describe('geminiClient Google Services integration API', () => {
     global.fetch = jest.fn(() =>
       Promise.resolve({
         ok: true,
-        json: () => Promise.resolve({ obstacleSpacingMultiplier: 1.1, speedScalingRate: 1.05 })
+        json: () => Promise.resolve([{ type: 'CACTUS', timing: 800 }])
       })
     );
   });
@@ -17,16 +17,16 @@ describe('geminiClient Google Services integration API', () => {
     global.fetch = originalFetch;
   });
 
-  it('safely fetches adaptive difficulty tuning sequences from the AI edge endpoints', async () => {
-    const pastScores = [1200, 1500, 1300];
-    const data = await geminiClient.getAdaptiveDifficulty(pastScores);
+  it('safely fetches procedural obstacle waves from the AI edge endpoints', async () => {
+    const data = await geminiClient.getObstacleWave('BADLANDS', 5, 'thriving');
     
-    expect(global.fetch).toHaveBeenCalledWith('/api/gemini/difficulty', expect.objectContaining({
+    expect(global.fetch).toHaveBeenCalledWith('/api/gemini/obstacles', expect.objectContaining({
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ pastScores })
+      body: JSON.stringify({ biome: 'BADLANDS', speed: 5, performance: 'thriving' })
     }));
     
-    expect(data.obstacleSpacingMultiplier).toBe(1.1);
+    expect(Array.isArray(data)).toBe(true);
+    expect(data[0].type).toBe('CACTUS');
   });
 });
