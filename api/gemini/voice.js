@@ -1,11 +1,11 @@
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).send('Method Not Allowed');
 
   try {
     const { biome, score, nearMiss, skillLevel } = req.body;
-    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
     
     const prompt = `You are Rex, the last T-Rex alive. You are sprinting from extinction.
     You are sardonic, surprisingly philosophical, and occasionally dramatic.
@@ -20,15 +20,13 @@ export default async function handler(req, res) {
     res.setHeader('Connection', 'keep-alive');
     res.flushHeaders();
 
-    const responseStream = await ai.models.generateContentStream({
-      model: "gemini-3.1-flash-lite-preview",
-      contents: prompt,
-      config: { maxOutputTokens: 100 }
-    });
+    const model = genAI.getGenerativeModel({ model: "gemini-3.1-flash-lite-preview" });
+    const responseStream = await model.generateContentStream(prompt);
     
-    for await (const chunk of responseStream) {
-      if (chunk.text) {
-        res.write(chunk.text);
+    for await (const chunk of responseStream.stream) {
+      const chunkText = chunk.text();
+      if (chunkText) {
+        res.write(chunkText);
       }
     }
     res.end();

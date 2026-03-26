@@ -35,7 +35,7 @@ export default async function handler(req, res) {
 
     console.log('[GEMINI IMAGE API] Generating image with prompt:', imagePrompt);
 
-    const model = genAI.getGenerativeModel({ model: "gemini-3.1-flash-image-preview" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-image" });
     const result = await model.generateContent({
       contents: [{
         parts: [
