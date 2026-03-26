@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { geminiClient } from '../../services/geminiClient';
 
 // Pre-generated fallback dialogues for REX when API limit is reached
 const FALLBACK_DIALOGUES = {
@@ -37,7 +36,7 @@ const FALLBACK_DIALOGUES = {
 
   // Score milestones (every 500 points)
   SCORE_MILESTONES: [
-    "500 points? You're just getting started, kid.",
+    "500 points? We're just getting started.",
     "1000 points already? Impressive... for a mammal.",
     "1500? You're making me look bad out here.",
     "2000 points? Now you're just showing off.",
@@ -125,39 +124,26 @@ export default function DinoVoice({ biome, score, nearMiss, skillLevel, gameOver
         // Use score milestone dialogue
         const milestoneIndex = Math.floor(score / 500) - 1; // 0-based index
         dialogueText = FALLBACK_DIALOGUES.SCORE_MILESTONES[milestoneIndex] ||
-                      FALLBACK_DIALOGUES.SCORE_MILESTONES[FALLBACK_DIALOGUES.SCORE_MILESTONES.length - 1];
+          FALLBACK_DIALOGUES.SCORE_MILESTONES[FALLBACK_DIALOGUES.SCORE_MILESTONES.length - 1];
         // console.log(`[DinoVoice] Score milestone ${score}: ${dialogueText}`);
       }
 
       triggerRef.current = biome;
       lastVoiceScoreRef.current = score;
       setIsVisible(true);
-      setText(dialogueText); // Start with fallback text
+      setText(dialogueText);
 
-      // Try AI-generated dialogue, but keep fallback if it fails
-      (async () => {
-        try {
-          let aiText = '';
-          await geminiClient.streamVoiceLine(
-            { biome, score: Math.floor(score), nearMiss: shouldTriggerNearMiss || false, skillLevel },
-            (chunk) => {
-              aiText += chunk;
-              setText(aiText); // Replace fallback with AI text as it streams
-            },
-            () => {
-              if (!gameOver) {
-                setTimeout(() => setIsVisible(false), 4000);
-              }
-            }
-          );
-        } catch (error) {
-          // console.log('[DinoVoice] AI dialogue failed, keeping fallback text');
-          // Keep the fallback text and hide after timeout (unless game over)
-          if (!gameOver) {
-            setTimeout(() => setIsVisible(false), 4000);
-          }
-        }
-      })();
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(dialogueText);
+        utterance.rate = 1.20;
+        utterance.pitch = 3;
+        window.speechSynthesis.speak(utterance);
+      }
+
+      if (!gameOver) {
+        setTimeout(() => setIsVisible(false), 4000);
+      }
     }
   }, [biome, nearMiss, score, skillLevel, deathTriggered]);
 

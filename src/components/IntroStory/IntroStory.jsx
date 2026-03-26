@@ -61,8 +61,8 @@ export default function IntroStory({ onComplete }) {
     if ('speechSynthesis' in window) {
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(currentText);
-      utterance.rate = 1.1;
-      utterance.pitch = 0.8;
+      utterance.rate = 1.20;
+      utterance.pitch = 3;
       utterance.onend = () => {
         isSpeechFinished.current = true;
         if (isTextFinished.current) triggerNext();

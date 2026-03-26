@@ -24,7 +24,7 @@ const LandscapePrompt = () => {
   );
 };
 
-const MainMenu = ({ onStart, onDiary, personality, setPersonality }) => (
+const MainMenu = ({ onStart, personality, setPersonality }) => (
   <div className="text-white flex flex-col items-center gap-4 w-full h-full bg-cover bg-center justify-center absolute inset-0" style={{
     backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('/images/main_bg.webp')`
   }}>
@@ -39,12 +39,11 @@ const MainMenu = ({ onStart, onDiary, personality, setPersonality }) => (
 
     <div className="flex flex-wrap justify-center gap-6 mt-6 font-pixel">
       <button onClick={onStart} className="px-8 py-4 bg-white text-black hover:bg-biome-final-fg hover:text-white transition-colors text-sm md:text-lg">START</button>
-      <button onClick={onDiary} className="px-8 py-4 border-2 border-white hover:text-biome-final-fg hover:border-biome-final-fg transition-colors text-sm md:text-lg">DINO'S DIARY</button>
     </div>
   </div>
 );
 
-const DeathScreen = ({ stats, onRestart, onDiary }) => {
+const DeathScreen = ({ stats, onRestart }) => {
   const [eulogy, setEulogy] = useState('Rex is compiling his final thoughts...');
 
   useEffect(() => {
@@ -66,34 +65,7 @@ const DeathScreen = ({ stats, onRestart, onDiary }) => {
 
       <div className="flex gap-8 mt-6 font-pixel text-yellow-400">
         <button onClick={onRestart} className="hover:text-biome-final-fg md:text-2xl text-xl transition-colors animate-pulse">RUN AGAIN</button>
-        <button onClick={() => onDiary(stats)} className="text-gray-400 hover:text-white md:text-sm text-xs self-end transition-colors mb-1">Save to Diary</button>
       </div>
-    </div>
-  );
-};
-
-const DiaryScreen = ({ onBack }) => {
-  const entries = JSON.parse(localStorage.getItem('dino_diary') || '[]');
-
-  return (
-    <div className="flex flex-col items-center gap-4 bg-[#f4e4bc] text-black w-full h-full p-8 overflow-y-auto font-pixel absolute inset-0">
-      <h2 className="md:text-3xl text-2xl mb-4 text-amber-900 border-b-4 border-amber-900 pb-2">Survival Journal</h2>
-
-      {entries.length === 0 ? (
-        <p className="text-sm mt-8">No entries yet...</p>
-      ) : (
-        <div className="w-full max-w-[800px] flex-col flex gap-4">
-          {entries.map((e, i) => (
-            <div key={i} className="border-b-2 border-amber-900/20 pb-3">
-              <p className="text-[10px] md:text-xs text-amber-800 mb-1">{e.date}</p>
-              <p className="text-xs md:text-sm leading-5">"{e.text}"</p>
-              <p className="text-[10px] md:text-xs text-gray-500 mt-2 font-bold">Score: {e.score} | Biome: {e.biome}</p>
-            </div>
-          ))}
-        </div>
-      )}
-
-      <button onClick={onBack} className="mt-6 bg-black text-white px-8 py-4 hover:bg-amber-900 md:text-sm text-xs">Close</button>
     </div>
   );
 };
@@ -108,35 +80,16 @@ export default function Main() {
     setGameState('dead');
   };
 
-  const handleAddToDiary = async (stats) => {
-    setGameState('loading');
-    try {
-      const text = await geminiClient.getJournalEntry(stats);
-      const entries = JSON.parse(localStorage.getItem('dino_diary') || '[]');
-      entries.unshift({
-        date: '65,000,032 BC - The End',
-        text,
-        score: stats.score,
-        biome: stats.biome
-      });
-      if (entries.length > 20) entries.pop();
-      localStorage.setItem('dino_diary', JSON.stringify(entries));
-    } catch (e) { }
-    setGameState('diary');
-  };
-
   return (
     <div className="w-full h-[100dvh] flex justify-center items-center bg-gray-900 overflow-hidden font-pixel">
       <LandscapePrompt />
 
       {/* Dynamic responsive internal game container maximizing screen usage */}
       <div className="w-full h-full flex shadow-2xl relative bg-black overflow-hidden">
-        {gameState === 'menu' && <MainMenu personality={personality} setPersonality={setPersonality} onStart={() => setGameState('intro')} onDiary={() => setGameState('diary')} />}
+        {gameState === 'menu' && <MainMenu personality={personality} setPersonality={setPersonality} onStart={() => setGameState('intro')} />}
         {gameState === 'intro' && <IntroStory onComplete={() => setGameState('play')} />}
         {gameState === 'play' && <GameCanvas personality={personality} onDeath={handleDeath} />}
-        {gameState === 'dead' && <DeathScreen stats={lastStats} onRestart={() => setGameState('play')} onDiary={handleAddToDiary} />}
-        {gameState === 'diary' && <DiaryScreen onBack={() => setGameState('menu')} />}
-        {gameState === 'loading' && <div className="absolute inset-0 bg-black flex justify-center items-center z-50 text-white md:text-2xl text-xl animate-pulse font-pixel">Rex is thinking...</div>}
+        {gameState === 'dead' && <DeathScreen stats={lastStats} onRestart={() => setGameState('play')} />}
       </div>
     </div>
   );

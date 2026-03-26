@@ -6,7 +6,6 @@ import { DinoSprite } from '../../game/DinoSprite';
 import { BiomeManager } from '../../game/BiomeManager';
 import { checkCollision } from '../../game/CollisionDetector';
 import DinoVoice from '../DinoVoice/DinoVoice.jsx';
-import { geminiClient } from '../../services/geminiClient';
 import { useVoiceInput } from '../../hooks/useVoiceInput';
 import { ParticleSystem } from '../../game/ParticleSystem';
 import { getSpriteImage, SPRITE_OBSTACLE_LARGE } from '../../assets/sprites';
@@ -202,17 +201,6 @@ export default function GameCanvas({ onDeath, personality }) {
   }, []);
 
   useEffect(() => {
-    const diary = JSON.parse(localStorage.getItem('dino_diary') || '[]');
-    const pastScores = diary.slice(0, 3).map(e => e.score);
-    if (pastScores.length > 0) {
-      geminiClient.getAdaptiveDifficulty(pastScores).then(res => {
-        if (res.obstacleSpacingMultiplier) difficultyRef.current.spacing = res.obstacleSpacingMultiplier;
-        if (res.speedScalingRate) difficultyRef.current.speedScale = res.speedScalingRate;
-      }).catch(console.error);
-    }
-  }, []);
-
-  useEffect(() => {
     if (canvasRef.current && !dinoRef.current) {
       const ctx = canvasRef.current.getContext('2d');
       dinoRef.current = new DinoSprite(ctx);
@@ -369,7 +357,7 @@ export default function GameCanvas({ onDeath, personality }) {
       ctx.font = '16px "Press Start 2P"';
       ctx.fillStyle = '#FFFFFF';
       // ctx.fillText(`Biome: ${biomeManagerRef.current.currentBiome.id}`, 400, 190);
-      ctx.fillText(`Final Score: ${Math.floor(score)}`, 400, 200);
+      // ctx.fillText(`Final Score: ${Math.floor(score)}`, 400, 200);
       if (gameOverCountdown !== null) {
         ctx.font = '12px "Press Start 2P"';
         ctx.fillStyle = '#FFFF00';

@@ -3,20 +3,6 @@
 const API_BASE = '/api/gemini';
 
 export const geminiClient = {
-  async getAdaptiveDifficulty(pastScores) {
-    try {
-      const res = await fetch(`${API_BASE}/difficulty`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pastScores })
-      });
-      if (!res.ok) throw new Error('Network error');
-      return await res.json();
-    } catch (e) {
-      return { obstacleSpacingMultiplier: 1.0, speedScalingRate: 1.0 };
-    }
-  },
-
   async getObstacleWave(biome, speed, performance) {
     const maxRetries = 2;
     let lastError;
