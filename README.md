@@ -10,13 +10,13 @@ We chose the **Gaming** vertical because we believe LLMs can do more than just g
 ## 🧠 Approach and Logic
 
 ### The "AI Dungeon Master" Concept
-Instead of a static game loop, we implemented a **Real-Time Level Design** architecture. We use **Gemini 2.5 Flash-Lite** as an invisible "Dungeon Master." 
+Instead of a static game loop, we implemented a **Real-Time Level Design** architecture. We use **Gemini AI** as an invisible "Dungeon Master." 
 - **Telemetry Loop:** Every few seconds, the game sends a "heartbeat" of player stats (Score, Speed, Biome, Performance) to the Gemini backend.
 - **Physics Hooks:** Gemini returns biased JSON waves that manipulate the game's physical properties. For example, it can flag obstacles to **SINK** into the ground or trigger a global **EARTHQUAKE** camera shake to sabotage the player's timing.
 
 ### Edge Optimization
 60fps is non-negotiable for an endless runner. We offloaded all heavy processing to the backend while keeping the frontend purely procedural.
-- **Procedural Canvas:** Obstacles are drawn mathematically at 60fps, avoiding heavy sprite sheets or slow image generation.
+- **Procedural Canvas:** Obstacles are drawn at 60fps, avoiding heavy sprite sheets or slow image generation.
 - **SpeechSynthesis:** All dinosaur voice personality lines are rendered natively by the browser to save bandwidth and API cost.
 
 ## 🛠️ How the Solution Works
@@ -26,7 +26,7 @@ Instead of a static game loop, we implemented a **Real-Time Level Design** archi
 - **Engine:** HTML5 Canvas 2D API for high-performance rendering.
 - **Backend:** Node.js + Express (serving the app as a monolith).
 - **Deployment:** Containerized with Docker and hosted on **Google Cloud Run**.
-- **AI Integration:** Google Generative AI SDK (`@google/generative-ai`) using Gemini-2.5-flash-lite.
+- **AI Integration:** Google Generative AI SDK.
 
 ### 2. The Loop
 - **Cloud Run API:** The serverless container manages secure API requests to Gemini.

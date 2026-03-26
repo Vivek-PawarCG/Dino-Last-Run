@@ -407,9 +407,9 @@ export default function GameCanvas({ onDeath, personality }) {
         </div>
       </div>
 
-      <button onClick={toggleVoice} className={`absolute top-12 left-6 md:left-12 font-pixel md:text-sm text-[10px] z-10 ${isListening ? 'text-green-500 animate-pulse' : 'text-gray-500'}`}>
+      {/* <button onClick={toggleVoice} className={`absolute top-12 left-6 md:left-12 font-pixel md:text-sm text-[10px] z-10 ${isListening ? 'text-green-500 animate-pulse' : 'text-gray-500'}`}>
         MIC {isListening ? 'ON (Say "jump", "duck", "pause")' : 'OFF'}
-      </button>
+      </button> */}
 
       {/* The canvas keeps 800x300 internal logic but stretches fully across responsive screen */}
       <canvas
