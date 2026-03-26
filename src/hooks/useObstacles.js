@@ -127,79 +127,71 @@ const createObstacle = (type, x, biome, imageData = null) => {
   }
 
   switch(type) {
-    // Badlands obstacles
+    // Badlands obstacles (Ground)
     case 'CACTUS':
     case 'CACTUS_CLUSTER':
       return { ...baseObstacle, type, x, y: 210, width: type === 'CACTUS_CLUSTER' ? 35 : 20, height: 40, sprite: 'cactus' };
-
     case 'ROCK':
       return { ...baseObstacle, type, x, y: 220, width: 25, height: 30, sprite: 'rock' };
 
-    // Jungle obstacles
+    // Jungle obstacles (Ground)
     case 'TREE':
-      return { ...baseObstacle, type, x, y: 180, width: 30, height: 60, sprite: 'tree' };
-
+      return { ...baseObstacle, type, x, y: 190, width: 30, height: 60, sprite: 'tree' };
     case 'VINE':
       return { ...baseObstacle, type, x, y: 200, width: 15, height: 50, sprite: 'vine' };
-
     case 'LOG':
       return { ...baseObstacle, type, x, y: 230, width: 40, height: 20, sprite: 'log' };
 
-    // Volcano obstacles
+    // Volcano obstacles (Ground)
     case 'LAVA_ROCK':
       return { ...baseObstacle, type, x, y: 215, width: 28, height: 35, sprite: 'lava_rock' };
-
     case 'FIRE_PIT':
       return { ...baseObstacle, type, x, y: 235, width: 35, height: 15, sprite: 'fire_pit' };
-
     case 'MAGMA_POOL':
       return { ...baseObstacle, type, x, y: 240, width: 45, height: 10, sprite: 'magma_pool' };
 
-    // Ice obstacles
+    // Ice obstacles (Ground)
     case 'ICE_SPIKE':
       return { ...baseObstacle, type, x, y: 200, width: 18, height: 50, sprite: 'ice_spike' };
-
     case 'SNOW_DRIFT':
       return { ...baseObstacle, type, x, y: 225, width: 32, height: 25, sprite: 'snow_drift' };
 
-    // Ocean obstacles
+    // Ocean obstacles (Ground)
     case 'CORAL':
       return { ...baseObstacle, type, x, y: 220, width: 22, height: 30, sprite: 'coral' };
-
     case 'SEAWEED':
       return { ...baseObstacle, type, x, y: 210, width: 16, height: 40, sprite: 'seaweed' };
 
-    // Space obstacles
-    case 'ASTEROID':
-      return { ...baseObstacle, type, x, y: 190, width: 25, height: 25, sprite: 'asteroid' };
-
+    // Space obstacles (Ground)
     case 'COMET':
-      return { ...baseObstacle, type, x, y: 175, width: 20, height: 15, sprite: 'comet' };
+      return { ...baseObstacle, type, x, y: 235, width: 20, height: 15, sprite: 'comet' };
+      
+    // Space obstacles (Aerial - MUST DUCK!) Y-bottom aligns exactly at 205
+    case 'ASTEROID':
+      return { ...baseObstacle, type, x, y: 180, width: 25, height: 25, sprite: 'asteroid' };
 
-    // Flying enemies
+    // Flying enemies (Aerial - MUST DUCK!) Y-bottom: 205
     case 'PTERODACTYL':
     case 'MONKEY':
     case 'SHARK':
     case 'ALIEN_POD':
-      return { ...baseObstacle, type, x, y: 180, width: 30, height: 20, sprite: 'flying' };
+      return { ...baseObstacle, type, x, y: 185, width: 30, height: 20, sprite: 'flying' };
 
-    // Special hazards
+    // Special hazards (Aerial - MUST DUCK!) Y-bottom: 205
     case 'ASH_CLOUD':
-      return { ...baseObstacle, type, x, y: 160, width: 40, height: 30, sprite: 'ash_cloud' };
-
+      return { ...baseObstacle, type, x, y: 175, width: 40, height: 30, sprite: 'ash_cloud' };
     case 'FROST_CRYSTAL':
-      return { ...baseObstacle, type, x, y: 200, width: 20, height: 20, sprite: 'frost_crystal' };
+      return { ...baseObstacle, type, x, y: 185, width: 20, height: 20, sprite: 'frost_crystal' };
+    case 'COSMIC_DUST':
+      return { ...baseObstacle, type, x, y: 180, width: 35, height: 25, sprite: 'cosmic_dust' };
 
+    // Special hazards (Ground)
     case 'WAVE':
       return { ...baseObstacle, type, x, y: 235, width: 50, height: 15, sprite: 'wave' };
-
-    case 'COSMIC_DUST':
-      return { ...baseObstacle, type, x, y: 170, width: 35, height: 25, sprite: 'cosmic_dust' };
-
     case 'AVALANCHE':
-      return { ...baseObstacle, type, x, y: 180, width: 60, height: 40, sprite: 'avalanche' };
+      return { ...baseObstacle, type, x, y: 210, width: 60, height: 40, sprite: 'avalanche' };
 
-    default:
+    default: // Failsafe ground obstacle
       return { ...baseObstacle, type: 'CACTUS', x, y: 210, width: 20, height: 40, sprite: 'cactus' };
   }
 };
@@ -284,7 +276,12 @@ export function useObstacles() {
         const spawnThreshold = (Math.random() * 1000 + (15000 / speed)) * difficultyMultiplier;
         if (spawnTimerRef.current > spawnThreshold) {
           spawnTimerRef.current = 0;
-          filtered.push(createObstacle('CACTUS', width, biome));
+          let offlineType = 'CACTUS';
+          if (biome === 'JUNGLE') offlineType = 'TREE';
+          if (biome === 'VOLCANIC') offlineType = 'LAVA_ROCK';
+          if (biome === 'TUNDRA') offlineType = 'ICE_SPIKE';
+          if (biome === 'FINAL RUN') offlineType = 'ASTEROID';
+          filtered.push(createObstacle(offlineType, width, biome));
         }
       }
 

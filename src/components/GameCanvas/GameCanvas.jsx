@@ -31,27 +31,9 @@ const renderBiomeObstacle = (ctx, obs, biome) => {
     }
   }
 
-  // Priority 2: For specific biome obstacles, show a placeholder indicating image is being generated
-  const shouldUseGeneratedImage = (
-    (biome.id === 'JUNGLE' && type === 'TREE') ||
-    (biome.id === 'VOLCANIC' && type === 'ROCK') ||
-    (biome.id === 'TUNDRA' && type === 'ICE_SPIKE') ||
-    (biome.id === 'FINAL RUN' && type === 'ASTEROID')
-  );
-
-  if (shouldUseGeneratedImage) {
-    // Draw a glowing placeholder to indicate AI image is expected
-    ctx.fillStyle = 'rgba(255, 255, 0, 0.3)';
-    ctx.fillRect(x, y, width, height);
-    ctx.strokeStyle = '#FFFF00';
-    ctx.lineWidth = 3;
-    ctx.strokeRect(x, y, width, height);
-    console.log(`[IMAGE GEN] ⏳ Showing placeholder for ${type} in ${biome.id} (image generating)`);
-    return;
-  }
-
+  // Remove Priority 2 placeholders since we are switching to instant procedural drawing
   // Fallback to procedural rendering
-  console.log(`[IMAGE GEN] 🔧 Using procedural rendering for ${type} in ${biome.id}`);
+  // console.log(`[IMAGE GEN] 🔧 Using procedural rendering for ${type} in ${biome.id}`);
   // Set colors based on biome and obstacle type
   let fillColor, strokeColor;
 
@@ -138,9 +120,10 @@ const renderBiomeObstacle = (ctx, obs, biome) => {
       // Draw irregular asteroid shape
       ctx.beginPath();
       ctx.moveTo(x + width / 2, y);
-      ctx.lineTo(x + width, y + height / 3);
-      ctx.lineTo(x + width * 0.8, y + height);
-      ctx.lineTo(x + width / 4, y + height * 0.8);
+      ctx.lineTo(x + width, y + height / 2);
+      ctx.lineTo(x + 3 * width / 4, y + height);
+      ctx.lineTo(x + width / 4, y + height);
+      ctx.lineTo(x, y + height / 2);
       ctx.closePath();
       ctx.fill();
       ctx.stroke();
