@@ -46,14 +46,16 @@ export default async function handler(req, res) {
       {
         "type": "CACTUS",
         "timing": 800,
-        "narrative": "A sharp cactus blocks your path in the desert.",
-        "biome": "${biome}",
-        "sprite": "cactus_large"
+        "behavior": "SINKING",
+        "earthquake": false,
+        "narrative": "A cactus slowly sinks into the sand!"
       }
     ]
     
-    Make timing rhythmic and challenging. Include variety in obstacle types.
-    Ensure obstacles fit the ${biome} biome theme.`;
+    RULES for Dynamic Mechanics:
+    - "behavior" can be "NORMAL" or "SINKING". A sinking obstacle is a trap that slowly sinks into the floor, allowing the player to safely run over it if they wait long enough.
+    - "earthquake" is a boolean. If true, the entire game screen will shake violently while this obstacle is visible. Give this to 10% of obstacles maximum.
+    Make timing rhythmic and challenging. Ensure obstacles fit the ${biome} theme.`;
 
     const model = genAI.getGenerativeModel({ model: "gemini-3.1-flash-lite-preview" });
     const result = await model.generateContent(prompt);

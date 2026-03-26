@@ -295,6 +295,16 @@ export default function GameCanvas({ onDeath, personality }) {
     const ctx = canvasRef.current.getContext('2d');
     ctx.clearRect(0, 0, 800, 300);
 
+    // Screen Shake (Earthquake AI Effect)
+    let shakeX = 0;
+    let shakeY = 0;
+    const isQuaking = obstacles.some(obs => obs.earthquake && obs.x < 800 && obs.x + obs.width > 0);
+    if (isQuaking) {
+      shakeX = (Math.random() - 0.5) * 15;
+      shakeY = (Math.random() - 0.5) * 15;
+      ctx.translate(shakeX, shakeY);
+    }
+
     biomeManagerRef.current.draw();
     particleSystemRef.current.draw();
 
@@ -314,6 +324,11 @@ export default function GameCanvas({ onDeath, personality }) {
 
     dinoRef.current.draw(50, 250 + yPos - 47);
 
+    // Revert context immediately to keep HUD interfaces completely stationary
+    if (isQuaking) {
+      ctx.translate(-shakeX, -shakeY);
+    }
+
     if (crashed) {
       if (gameOverCountdown === null) {
         // Start the game over countdown
@@ -321,7 +336,7 @@ export default function GameCanvas({ onDeath, personality }) {
         setIsRunning(false);
         dinoRef.current.state = 'dead';
         setFinalScore(Math.floor(score)); // Capture final score at moment of death
-        setGameOverCountdown(8); // 8 second countdown
+        setGameOverCountdown(5); // 5 second countdown
         setDeathTriggered(true); // Trigger REX's final words
 
         // Start countdown timer

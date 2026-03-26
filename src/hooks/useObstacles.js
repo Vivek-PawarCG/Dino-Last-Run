@@ -62,10 +62,17 @@ export function useObstacles() {
     setObstacles(prev => {
       let filtered = prev.filter(obs => obs.x + obs.width > 0);
 
-      filtered = filtered.map(obs => ({
-        ...obs,
-        x: obs.x - (speed * (deltaTime / 16.6))
-      }));
+      filtered = filtered.map(obs => {
+        let newY = obs.y;
+        if (obs.behavior === 'SINKING') {
+          newY += (deltaTime / 16.6) * 0.4;
+        }
+        return {
+          ...obs,
+          x: obs.x - (speed * (deltaTime / 16.6)),
+          y: newY
+        };
+      });
 
       spawnTimerRef.current += deltaTime;
 
@@ -78,6 +85,8 @@ export function useObstacles() {
            waveQueueRef.current.shift();
            const newObs = createObstacle(nextInWave.type, width, biome);
            newObs.narrative = nextInWave.narrative;
+           newObs.behavior = nextInWave.behavior ? String(nextInWave.behavior).toUpperCase().trim() : 'NORMAL';
+           newObs.earthquake = !!nextInWave.earthquake;
            filtered.push(newObs);
         }
       } else {
